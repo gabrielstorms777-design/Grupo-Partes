@@ -101,10 +101,13 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
     if (!editMode || !draggedItemRef.current || !imageContainerRef.current) return;
 
     const containerRect = imageContainerRef.current.getBoundingClientRect();
+    if (containerRect.width === 0 || containerRect.height === 0) {
+      return;
+    }
+
     let x = e.clientX - containerRect.left;
     let y = e.clientY - containerRect.top;
 
-    // Clamp coordinates within the container bounds
     x = Math.max(0, Math.min(x, containerRect.width));
     y = Math.max(0, Math.min(y, containerRect.height));
 
