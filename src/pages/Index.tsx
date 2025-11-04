@@ -1,28 +1,25 @@
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import { ClientForm } from '@/components/ClientForm';
+import { InspectionDashboard } from '@/components/InspectionDashboard';
+
+interface ClientData {
+  clientName: string;
+  location: string;
+  equipmentDetails: string;
+}
 
 const Index = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const [clientData, setClientData] = useState<ClientData | null>(null);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
+  const handleClientFormSubmit = (data: ClientData) => {
+    setClientData(data);
   };
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Bienvenido a Energen</h1>
-        <p className="text-xl text-gray-600 mb-6">
-          Sesión iniciada como: {user?.email}
-        </p>
-        <Button onClick={handleLogout}>Cerrar Sesión</Button>
-      </div>
-    </div>
-  );
+  if (!clientData) {
+    return <ClientForm onSubmit={handleClientFormSubmit} />;
+  }
+
+  return <InspectionDashboard clientData={clientData} />;
 };
 
 export default Index;
