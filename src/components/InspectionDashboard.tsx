@@ -180,7 +180,7 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
           if (status) {
             const { text, color } = statusMap[status];
             const statusText = `[${text}]`;
-            const statusColWidth = 30;
+            const statusColWidth = 45; // Increased width for status column
             const titleX = margin + statusColWidth;
             const titleMaxWidth = pageWidth - titleX - margin;
             
