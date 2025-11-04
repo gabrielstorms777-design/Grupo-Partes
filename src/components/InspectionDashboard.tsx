@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { checklistData, ChecklistItem } from '@/lib/checklistData';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, AlertTriangle, XCircle, LogOut, Loader2 } from 'lucide-react';
+import { Check, AlertTriangle, XCircle, LogOut, Loader2, BookMarked } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import jsPDF from 'jspdf';
-import { showSuccess } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ClientData {
   clientName: string;
@@ -42,7 +43,6 @@ const initialState = checklistData.reduce((acc, item) => {
   return acc;
 }, {} as ReportState);
 
-// Helper to get image as Base64
 const getImageBase64 = async (url: string) => {
   const response = await fetch(url);
   const blob = await response.blob();
@@ -56,8 +56,9 @@ const getImageBase64 = async (url: string) => {
 
 export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) => {
   const [reportState, setReportState] = useState<ReportState>(initialState);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleStatusChange = (itemId: string, checkTitle: string, status: Status) => {
     setReportState(prevState => ({
@@ -94,14 +95,41 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
     }
   };
 
+  const handleFinalizeReport = async () => {
+    setIsProcessing(true);
+
+    // 1. Generate PDF
+    await generatePdf();
+
+    // 2. Save to Supabase
+    if (user) {
+      const { error } = await supabase.from('reports').insert({
+        user_id: user.id,
+        client_name: clientData.clientName,
+        location: clientData.location,
+        equipment_details: clientData.equipmentDetails,
+        report_data: reportState,
+      });
+
+      if (error) {
+        showError('El PDF se generó, pero hubo un error al guardar el reporte.');
+        console.error('Supabase error:', error);
+      } else {
+        showSuccess('Reporte generado y guardado exitosamente.');
+      }
+    } else {
+      showError('No se pudo guardar el reporte: usuario no autenticado.');
+    }
+
+    setIsProcessing(false);
+  };
+
   const generatePdf = async () => {
-    setIsGeneratingPdf(true);
     const doc = new jsPDF();
     const margin = 15;
     const pageWidth = doc.internal.pageSize.getWidth();
     let y = 20;
 
-    // --- PDF Header ---
     try {
       const logoUrl = 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/690661473081bc838e4020d0.png';
       const logoBase64 = await getImageBase64(logoUrl);
@@ -119,7 +147,6 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
     doc.line(margin, y, pageWidth - margin, y);
     y += 10;
 
-    // --- Client Info ---
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
     doc.text('Cliente:', margin, y);
@@ -145,7 +172,6 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
     doc.line(margin, y, pageWidth - margin, y);
     y += 10;
 
-    // --- Checklist Body ---
     const checkPageBreak = (neededHeight: number) => {
       if (y + neededHeight > doc.internal.pageSize.getHeight() - margin) {
         doc.addPage();
@@ -180,7 +206,7 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
           if (status) {
             const { text, color } = statusMap[status];
             const statusText = `[${text}]`;
-            const statusColWidth = 45; // Increased width for status column
+            const statusColWidth = 45;
             const titleX = margin + statusColWidth;
             const titleMaxWidth = pageWidth - titleX - margin;
             
@@ -217,14 +243,20 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
     }
 
     doc.save(`Reporte_${clientData.clientName.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
-    showSuccess('Reporte PDF generado exitosamente.');
-    setIsGeneratingPdf(false);
   };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
       <header className="flex justify-between items-start mb-6">
-        <h1 className="text-3xl font-bold">Reporte de Inspección</h1>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold">Reporte de Inspección</h1>
+          <Button asChild variant="link" className="p-0 h-auto text-base">
+            <Link to="/reports">
+              <BookMarked className="mr-2 h-4 w-4" />
+              Ver reportes guardados
+            </Link>
+          </Button>
+        </div>
         <Button variant="ghost" onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
         </Button>
@@ -345,13 +377,13 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
             <Button 
               size="lg" 
               className="bg-blue-600 hover:bg-blue-700 shadow-lg"
-              onClick={generatePdf}
-              disabled={isGeneratingPdf}
+              onClick={handleFinalizeReport}
+              disabled={isProcessing}
             >
-              {isGeneratingPdf ? (
+              {isProcessing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generando...
+                  Procesando...
                 </>
               ) : (
                 'Generar Informe'
