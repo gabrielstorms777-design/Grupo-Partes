@@ -5,7 +5,7 @@ import { checklistData, ChecklistItem } from '@/lib/checklistData';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Check, AlertTriangle, XCircle, LogOut } from 'lucide-react';
 
 interface ClientData {
@@ -70,6 +70,13 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
     navigate('/login');
   };
 
+  const handleScrollTo = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
       <header className="flex justify-between items-center mb-8">
@@ -84,18 +91,29 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
       </header>
 
       <main>
-        <section id="main-image" className="mb-8">
+        <section id="main-image" className="mb-8 relative">
           <img
             src="https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/69077d3aebf9337d2323ac1b.png"
             alt="Equipo Generador"
             className="w-full h-auto rounded-lg shadow-lg"
           />
+          {checklistData.map((item, index) => (
+            <button
+              key={item.id}
+              onClick={() => handleScrollTo(item.id)}
+              className="absolute w-8 h-8 bg-blue-600 rounded-full animate-pulse transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-white font-bold shadow-lg hover:animate-none hover:scale-125 transition-transform border-2 border-white"
+              style={{ top: item.position.top, left: item.position.left }}
+              title={item.title}
+            >
+              {index + 1}
+            </button>
+          ))}
         </section>
 
         <section id="checklist">
           <Accordion type="single" collapsible className="w-full">
             {checklistData.map((item: ChecklistItem) => (
-              <AccordionItem value={item.id} key={item.id} className="border-gray-700">
+              <AccordionItem value={item.id} key={item.id} id={item.id} className="border-gray-700 scroll-mt-20">
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center space-x-4">
                     <img src={item.image} alt={item.title} className="w-16 h-16 object-cover rounded-md" />
