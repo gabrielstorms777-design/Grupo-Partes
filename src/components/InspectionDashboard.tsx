@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { checklistData, ChecklistItem } from '@/lib/checklistData';
@@ -6,11 +6,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Check, AlertTriangle, XCircle, LogOut, Edit, Copy } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { Check, AlertTriangle, XCircle, LogOut } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { showSuccess } from '@/utils/toast';
 
 interface ClientData {
   clientName: string;
@@ -31,11 +28,6 @@ interface ReportState {
   };
 }
 
-const initialPositions = checklistData.reduce((acc, item) => {
-  acc[item.id] = item.position;
-  return acc;
-}, {} as { [id: string]: { top: string; left: string } });
-
 const initialState = checklistData.reduce((acc, item) => {
   acc[item.id] = {
     checks: item.sections.flatMap(s => s.checks).reduce((checkAcc, check) => {
@@ -49,11 +41,7 @@ const initialState = checklistData.reduce((acc, item) => {
 
 export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) => {
   const [reportState, setReportState] = useState<ReportState>(initialState);
-  const [editMode, setEditMode] = useState(false);
-  const [positions, setPositions] = useState(initialPositions);
   const navigate = useNavigate();
-  const imageContainerRef = useRef<HTMLDivElement>(null);
-  const draggedItemRef = useRef<string | null>(null);
 
   const handleStatusChange = (itemId: string, checkText: string, status: Status) => {
     setReportState(prevState => ({
@@ -84,69 +72,10 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
   };
 
   const handleScrollTo = (id: string) => {
-    if (editMode) return;
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent, itemId: string) => {
-    if (!editMode) return;
-    draggedItemRef.current = itemId;
-    e.preventDefault();
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!editMode || !draggedItemRef.current || !imageContainerRef.current) return;
-
-    const containerRect = imageContainerRef.current.getBoundingClientRect();
-    if (containerRect.width === 0 || containerRect.height === 0) {
-      return;
-    }
-
-    let x = e.clientX - containerRect.left;
-    let y = e.clientY - containerRect.top;
-
-    x = Math.max(0, Math.min(x, containerRect.width));
-    y = Math.max(0, Math.min(y, containerRect.height));
-
-    const left = (x / containerRect.width) * 100;
-    const top = (y / containerRect.height) * 100;
-
-    setPositions(prev => ({
-      ...prev,
-      [draggedItemRef.current!]: {
-        top: `${top.toFixed(2)}%`,
-        left: `${left.toFixed(2)}%`,
-      },
-    }));
-  };
-
-  const handleMouseUp = () => {
-    draggedItemRef.current = null;
-  };
-
-  useEffect(() => {
-    if (editMode) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    } else {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [editMode]);
-
-  const handleCopyPositions = () => {
-    const positionsString = JSON.stringify(positions, null, 2);
-    navigator.clipboard.writeText(positionsString);
-    console.log("Nuevas coordenadas copiadas al portapapeles:", positions);
-    showSuccess("¡Coordenadas copiadas al portapapeles!");
   };
 
   return (
@@ -157,24 +86,13 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
           <p className="text-gray-400">{clientData.clientName} - {clientData.location}</p>
           <p className="text-gray-400">{clientData.equipmentDetails}</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Switch id="edit-mode" checked={editMode} onCheckedChange={setEditMode} />
-            <Label htmlFor="edit-mode" className="flex items-center"><Edit className="mr-2 h-4 w-4" /> Modo Edición</Label>
-          </div>
-          {editMode && (
-            <Button onClick={handleCopyPositions} variant="outline" size="sm">
-              <Copy className="mr-2 h-4 w-4" /> Copiar Coordenadas
-            </Button>
-          )}
-          <Button variant="ghost" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
-          </Button>
-        </div>
+        <Button variant="ghost" onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
+        </Button>
       </header>
 
       <main>
-        <section id="main-image" className="mb-8 relative" ref={imageContainerRef}>
+        <section id="main-image" className="mb-8 relative">
           <img
             src="https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/69077d3aebf9337d2323ac1b.png"
             alt="Equipo Generador"
@@ -185,9 +103,8 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => handleScrollTo(item.id)}
-                  onMouseDown={(e) => handleMouseDown(e, item.id)}
-                  className={`absolute w-8 h-8 bg-green-600 rounded-full animate-pulse transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-white font-bold shadow-lg hover:animate-none hover:scale-125 transition-transform border-2 border-white ${editMode ? 'cursor-move' : 'cursor-pointer'}`}
-                  style={{ top: positions[item.id].top, left: positions[item.id].left }}
+                  className="absolute w-8 h-8 bg-green-600 rounded-full animate-pulse transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-white font-bold shadow-lg hover:animate-none hover:scale-125 transition-transform border-2 border-white cursor-pointer"
+                  style={{ top: item.position.top, left: item.position.left }}
                 >
                   {index + 1}
                 </button>

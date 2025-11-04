@@ -14,7 +14,7 @@ export const checklistData: ChecklistItem[] = [
     id: 'motor',
     title: '1. Motor',
     image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/6907b367ebf9333d612a7d34.png',
-    position: { top: '55%', left: '30%' },
+    position: { top: '64.47%', left: '62.26%' },
     sections: [
       {
         title: 'Sistema de Lubricación',
@@ -61,7 +61,7 @@ export const checklistData: ChecklistItem[] = [
     id: 'radiador',
     title: '2. Radiador',
     image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/69078ffe2a48938ef8a0d63e.png',
-    position: { top: '50%', left: '10%' },
+    position: { top: '58.43%', left: '86.42%' },
     sections: [
       {
         title: 'Inspección',
@@ -79,7 +79,7 @@ export const checklistData: ChecklistItem[] = [
     id: 'generador',
     title: '3. Generador',
     image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/69078ffe2a48938ef8a0d63e.png',
-    position: { top: '55%', left: '60%' },
+    position: { top: '67.05%', left: '38.85%' },
     sections: [
       {
         title: 'Inspección',
@@ -96,7 +96,7 @@ export const checklistData: ChecklistItem[] = [
     id: 'tablero_carga',
     title: '4. Tablero de Carga',
     image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/6907b367a0261ac735a480a9.png',
-    position: { top: '40%', left: '85%' },
+    position: { top: '53.32%', left: '15.72%' },
     sections: [
       {
         title: 'Inspección',
@@ -113,7 +113,7 @@ export const checklistData: ChecklistItem[] = [
     id: 'bateria',
     title: '5. Batería',
     image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/690796ce843912134c8999b1.png',
-    position: { top: '75%', left: '80%' },
+    position: { top: '77.54%', left: '33.91%' },
     sections: [
       {
         title: 'Inspección',
@@ -131,7 +131,7 @@ export const checklistData: ChecklistItem[] = [
     id: 'tanque_combustible',
     title: '6. Tanque de Combustible',
     image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/69079933843912627d89efa2.png',
-    position: { top: '85%', left: '50%' },
+    position: { top: '86.11%', left: '47.78%' },
     sections: [
       {
         title: 'Inspección',
@@ -149,7 +149,7 @@ export const checklistData: ChecklistItem[] = [
     id: 'escape',
     title: '7. Escape',
     image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/6907b1b768dfc25cea8e3ae1.png',
-    position: { top: '20%', left: '45%' },
+    position: { top: '50.30%', left: '70.84%' },
     sections: [
       {
         title: 'Inspección',
@@ -166,7 +166,7 @@ export const checklistData: ChecklistItem[] = [
     id: 'cabina_grupo',
     title: '8. Cabina Grupo',
     image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/6907b36705f2752ffd4993cc.png',
-    position: { top: '5%', left: '5%' },
+    position: { top: '47.94%', left: '40.98%' },
     sections: [
       {
         title: 'Inspección',
@@ -183,7 +183,7 @@ export const checklistData: ChecklistItem[] = [
     id: 'tablero_transferencia',
     title: '9. Tablero de Transferencia (ATS)',
     image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/690797b1a0261ac36aa14c97.png',
-    position: { top: '10%', left: '90%' },
+    position: { top: '62.22%', left: '16.20%' },
     sections: [
       {
         title: 'Inspección',
@@ -200,7 +200,7 @@ export const checklistData: ChecklistItem[] = [
     id: 'sector_entorno',
     title: '10. Sector / Entorno',
     image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/6907db06529f0595a7b77062.png',
-    position: { top: '90%', left: '10%' },
+    position: { top: '94.89%', left: '46.81%' },
     sections: [
       {
         title: 'Inspección',
