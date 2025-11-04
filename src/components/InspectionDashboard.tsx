@@ -98,10 +98,7 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
   const handleFinalizeReport = async () => {
     setIsProcessing(true);
 
-    // 1. Generate PDF
-    await generatePdf();
-
-    // 2. Save to Supabase
+    // Paso 1: Guardar en Supabase PRIMERO para asegurar que los datos no se pierdan.
     if (user) {
       const { error } = await supabase.from('reports').insert({
         user_id: user.id,
@@ -112,13 +109,25 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
       });
 
       if (error) {
-        showError('El PDF se generó, pero hubo un error al guardar el reporte.');
+        showError('Hubo un error al guardar el reporte. Por favor, inténtelo de nuevo.');
         console.error('Supabase error:', error);
+        setIsProcessing(false);
+        return;
       } else {
-        showSuccess('Reporte generado y guardado exitosamente.');
+        showSuccess('Reporte guardado exitosamente. Generando PDF...');
       }
     } else {
       showError('No se pudo guardar el reporte: usuario no autenticado.');
+      setIsProcessing(false);
+      return;
+    }
+
+    // Paso 2: Generar el PDF. Este proceso puede ser lento, pero los datos ya están a salvo.
+    try {
+      await generatePdf();
+    } catch (pdfError) {
+      console.error("Error al generar el PDF:", pdfError);
+      showError("El reporte se guardó, pero hubo un error al generar el PDF.");
     }
 
     setIsProcessing(false);
