@@ -6,9 +6,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Check, AlertTriangle, XCircle, LogOut } from 'lucide-react';
+import { Check, AlertTriangle, XCircle, LogOut, Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import jsPDF from 'jspdf';
+import { showSuccess } from '@/utils/toast';
 
 interface ClientData {
   clientName: string;
@@ -40,8 +42,21 @@ const initialState = checklistData.reduce((acc, item) => {
   return acc;
 }, {} as ReportState);
 
+// Helper to get image as Base64
+const getImageBase64 = async (url: string) => {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
 export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) => {
   const [reportState, setReportState] = useState<ReportState>(initialState);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const navigate = useNavigate();
 
   const handleStatusChange = (itemId: string, checkTitle: string, status: Status) => {
@@ -77,6 +92,127 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+  };
+
+  const generatePdf = async () => {
+    setIsGeneratingPdf(true);
+    const doc = new jsPDF();
+    const margin = 15;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 20;
+
+    // --- PDF Header ---
+    try {
+      const logoUrl = 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/690661473081bc838e4020d0.png';
+      const logoBase64 = await getImageBase64(logoUrl);
+      doc.addImage(logoBase64, 'PNG', margin, 10, 40, 15);
+    } catch (error) {
+      console.error("Error loading logo for PDF:", error);
+    }
+
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text('Reporte de Inspección Técnica', pageWidth / 2, 20, { align: 'center' });
+    
+    y += 20;
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
+
+    // --- Client Info ---
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('Cliente:', margin, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(clientData.clientName, margin + 25, y);
+
+    doc.setFont(undefined, 'bold');
+    doc.text('Fecha:', pageWidth - margin - 35, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(new Date().toLocaleDateString('es-ES'), pageWidth - margin, y, { align: 'right' });
+
+    y += 7;
+    doc.setFont(undefined, 'bold');
+    doc.text('Localidad:', margin, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(clientData.location, margin + 25, y);
+    y += 7;
+    doc.setFont(undefined, 'bold');
+    doc.text('Equipo:', margin, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(clientData.equipmentDetails, margin + 25, y);
+    y += 10;
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
+
+    // --- Checklist Body ---
+    const checkPageBreak = (neededHeight: number) => {
+      if (y + neededHeight > doc.internal.pageSize.getHeight() - margin) {
+        doc.addPage();
+        y = margin;
+      }
+    };
+
+    const statusMap: { [key in NonNullable<Status>]: { text: string; color: [number, number, number] } } = {
+      ok: { text: 'OK', color: [0, 128, 0] },
+      caution: { text: 'PRECAUCIÓN', color: [255, 165, 0] },
+      fail: { text: 'FALLO', color: [255, 0, 0] },
+    };
+
+    for (const item of checklistData) {
+      checkPageBreak(15);
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text(item.title, margin, y);
+      y += 8;
+
+      for (const section of item.sections) {
+        checkPageBreak(10);
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(60, 60, 60);
+        doc.text(section.title, margin + 5, y);
+        y += 6;
+        doc.setTextColor(0, 0, 0);
+
+        for (const check of section.checks) {
+          const status = reportState[item.id].checks[check.title];
+          if (status) {
+            checkPageBreak(10);
+            const { text, color } = statusMap[status];
+            doc.setFontSize(10);
+            
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(color[0], color[1], color[2]);
+            doc.text(`[${text}]`, margin + 10, y);
+            doc.setTextColor(0, 0, 0);
+            
+            doc.setFont(undefined, 'normal');
+            const splitTitle = doc.splitTextToSize(check.title, pageWidth - margin * 2 - 40);
+            doc.text(splitTitle, margin + 30, y);
+            y += (splitTitle.length * 4);
+          }
+        }
+      }
+
+      const observation = reportState[item.id].observation;
+      if (observation.trim()) {
+        checkPageBreak(15);
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'bold');
+        doc.text('Observaciones:', margin + 5, y);
+        y += 6;
+        doc.setFont(undefined, 'normal');
+        const splitObservation = doc.splitTextToSize(observation, pageWidth - margin * 2 - 15);
+        doc.text(splitObservation, margin + 10, y);
+        y += (splitObservation.length * 5) + 5;
+      }
+      y += 5;
+    }
+
+    doc.save(`Reporte_${clientData.clientName.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+    showSuccess('Reporte PDF generado exitosamente.');
+    setIsGeneratingPdf(false);
   };
 
   return (
@@ -146,7 +282,7 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
                                     onValueChange={(status) => {
                                       handleStatusChange(item.id, check.title, status as Status || null);
                                     }}
-                                    onClick={(e) => e.stopPropagation()} // Evita que el acordeón se cierre al hacer clic
+                                    onClick={(e) => e.stopPropagation()}
                                   >
                                     <ToggleGroupItem value="ok" aria-label="OK" className="px-2 data-[state=on]:bg-green-600 data-[state=on]:text-white">
                                       <Check className="h-4 w-4" />
@@ -184,7 +320,21 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
           </Accordion>
         </section>
         <div className="fixed bottom-8 right-8">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 shadow-lg">Guardar Reporte</Button>
+            <Button 
+              size="lg" 
+              className="bg-blue-600 hover:bg-blue-700 shadow-lg"
+              onClick={generatePdf}
+              disabled={isGeneratingPdf}
+            >
+              {isGeneratingPdf ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generando...
+                </>
+              ) : (
+                'Guardar Reporte'
+              )}
+            </Button>
         </div>
       </main>
     </div>
