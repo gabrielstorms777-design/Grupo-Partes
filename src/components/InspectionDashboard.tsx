@@ -1,17 +1,16 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { checklistData, ChecklistItem } from '@/lib/checklistData';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, AlertTriangle, XCircle, LogOut, Loader2, BookMarked } from 'lucide-react';
+import { Check, AlertTriangle, XCircle, LogOut, Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import jsPDF from 'jspdf';
 import { showError, showSuccess } from '@/utils/toast';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface ClientData {
   clientName: string;
@@ -58,7 +57,6 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
   const [reportState, setReportState] = useState<ReportState>(initialState);
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const handleStatusChange = (itemId: string, checkTitle: string, status: Status) => {
     setReportState(prevState => ({
@@ -97,39 +95,13 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
 
   const handleFinalizeReport = async () => {
     setIsProcessing(true);
-
-    // Paso 1: Guardar en Supabase PRIMERO para asegurar que los datos no se pierdan.
-    if (user) {
-      const { error } = await supabase.from('reports').insert({
-        user_id: user.id,
-        client_name: clientData.clientName,
-        location: clientData.location,
-        equipment_details: clientData.equipmentDetails,
-        report_data: reportState,
-      });
-
-      if (error) {
-        showError('Hubo un error al guardar el reporte. Por favor, inténtelo de nuevo.');
-        console.error('Supabase error:', error);
-        setIsProcessing(false);
-        return;
-      } else {
-        showSuccess('Reporte guardado exitosamente. Generando PDF...');
-      }
-    } else {
-      showError('No se pudo guardar el reporte: usuario no autenticado.');
-      setIsProcessing(false);
-      return;
-    }
-
-    // Paso 2: Generar el PDF. Este proceso puede ser lento, pero los datos ya están a salvo.
     try {
       await generatePdf();
+      showSuccess('PDF generado exitosamente.');
     } catch (pdfError) {
       console.error("Error al generar el PDF:", pdfError);
-      showError("El reporte se guardó, pero hubo un error al generar el PDF.");
+      showError("Hubo un error al generar el PDF.");
     }
-
     setIsProcessing(false);
   };
 
@@ -259,12 +231,6 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
       <header className="flex justify-between items-start mb-6">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Reporte de Inspección</h1>
-          <Button asChild variant="link" className="p-0 h-auto text-base">
-            <Link to="/reports">
-              <BookMarked className="mr-2 h-4 w-4" />
-              Ver reportes guardados
-            </Link>
-          </Button>
         </div>
         <Button variant="ghost" onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
