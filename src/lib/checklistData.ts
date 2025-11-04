@@ -13,7 +13,7 @@ export const checklistData: ChecklistItem[] = [
   {
     id: 'motor',
     title: '1. Motor',
-    image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/690791a3ebf933453a2640f2.png',
+    image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/6907b367ebf9333d612a7d34.png',
     position: { top: '55%', left: '30%' },
     sections: [
       {
