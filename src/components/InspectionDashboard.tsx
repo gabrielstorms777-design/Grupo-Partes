@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, AlertTriangle, XCircle, LogOut } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface ClientData {
   clientName: string;
@@ -23,7 +24,7 @@ type Status = 'ok' | 'caution' | 'fail' | null;
 
 interface ReportState {
   [itemId: string]: {
-    checks: { [checkText: string]: Status };
+    checks: { [checkTitle: string]: Status };
     observation: string;
   };
 }
@@ -31,9 +32,9 @@ interface ReportState {
 const initialState = checklistData.reduce((acc, item) => {
   acc[item.id] = {
     checks: item.sections.flatMap(s => s.checks).reduce((checkAcc, check) => {
-      checkAcc[check] = null;
+      checkAcc[check.title] = null;
       return checkAcc;
-    }, {} as { [checkText: string]: Status }),
+    }, {} as { [checkTitle: string]: Status }),
     observation: '',
   };
   return acc;
@@ -43,14 +44,14 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
   const [reportState, setReportState] = useState<ReportState>(initialState);
   const navigate = useNavigate();
 
-  const handleStatusChange = (itemId: string, checkText: string, status: Status) => {
+  const handleStatusChange = (itemId: string, checkTitle: string, status: Status) => {
     setReportState(prevState => ({
       ...prevState,
       [itemId]: {
         ...prevState[itemId],
         checks: {
           ...prevState[itemId].checks,
-          [checkText]: prevState[itemId].checks[checkText] === status ? null : status,
+          [checkTitle]: status,
         },
       },
     }));
@@ -130,44 +131,43 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
                   <Card className="bg-gray-800 border-gray-700">
                     <CardContent className="p-6">
                       {item.sections.map(section => (
-                        <div key={section.title} className="mb-6">
-                          <h4 className="text-lg font-bold text-blue-400 mb-3">{section.title}</h4>
-                          <ul className="space-y-4">
+                        <div key={section.title} className="mb-6 last:mb-0">
+                          <h4 className="text-lg font-bold text-blue-400 mb-4">{section.title}</h4>
+                          <Accordion type="multiple" className="w-full space-y-2">
                             {section.checks.map(check => (
-                              <li key={check} className="flex flex-col md:flex-row md:items-center justify-between">
-                                <p className="flex-1 mb-2 md:mb-0">{check}</p>
-                                <div className="flex items-center space-x-2">
-                                  <Button
-                                    size="icon"
-                                    variant={reportState[item.id].checks[check] === 'ok' ? 'default' : 'outline'}
-                                    onClick={() => handleStatusChange(item.id, check, 'ok')}
-                                    className="bg-green-600 hover:bg-green-700 border-green-600 text-white"
+                              <AccordionItem value={check.title} key={check.title} className="border border-gray-700 rounded-md bg-gray-900/50">
+                                <AccordionTrigger className="p-3 hover:no-underline">
+                                  <span className="flex-1 text-left pr-4">{check.title}</span>
+                                  <ToggleGroup
+                                    type="single"
+                                    variant="outline"
+                                    size="sm"
+                                    value={reportState[item.id].checks[check.title]}
+                                    onValueChange={(status) => {
+                                      handleStatusChange(item.id, check.title, status as Status || null);
+                                    }}
+                                    onClick={(e) => e.stopPropagation()} // Evita que el acordeón se cierre al hacer clic
                                   >
-                                    <Check className="h-5 w-5" />
-                                  </Button>
-                                  <Button
-                                    size="icon"
-                                    variant={reportState[item.id].checks[check] === 'caution' ? 'default' : 'outline'}
-                                    onClick={() => handleStatusChange(item.id, check, 'caution')}
-                                    className="bg-yellow-500 hover:bg-yellow-600 border-yellow-500 text-white"
-                                  >
-                                    <AlertTriangle className="h-5 w-5" />
-                                  </Button>
-                                  <Button
-                                    size="icon"
-                                    variant={reportState[item.id].checks[check] === 'fail' ? 'default' : 'outline'}
-                                    onClick={() => handleStatusChange(item.id, check, 'fail')}
-                                    className="bg-red-600 hover:bg-red-700 border-red-600 text-white"
-                                  >
-                                    <XCircle className="h-5 w-5" />
-                                  </Button>
-                                </div>
-                              </li>
+                                    <ToggleGroupItem value="ok" aria-label="OK" className="px-2 data-[state=on]:bg-green-600 data-[state=on]:text-white">
+                                      <Check className="h-4 w-4" />
+                                    </ToggleGroupItem>
+                                    <ToggleGroupItem value="caution" aria-label="Caution" className="px-2 data-[state=on]:bg-yellow-500 data-[state=on]:text-white">
+                                      <AlertTriangle className="h-4 w-4" />
+                                    </ToggleGroupItem>
+                                    <ToggleGroupItem value="fail" aria-label="Fail" className="px-2 data-[state=on]:bg-red-600 data-[state=on]:text-white">
+                                      <XCircle className="h-4 w-4" />
+                                    </ToggleGroupItem>
+                                  </ToggleGroup>
+                                </AccordionTrigger>
+                                <AccordionContent className="p-3 pt-0 text-gray-400">
+                                  {check.description}
+                                </AccordionContent>
+                              </AccordionItem>
                             ))}
-                          </ul>
+                          </Accordion>
                         </div>
                       ))}
-                      <div>
+                      <div className="mt-6">
                         <h4 className="text-lg font-bold text-blue-400 mb-3">Observaciones</h4>
                         <Textarea
                           placeholder="Añada notas específicas de esta sección..."
