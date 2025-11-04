@@ -5,7 +5,7 @@ import { checklistData, ChecklistItem } from '@/lib/checklistData';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, AlertTriangle, XCircle, LogOut, Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -178,19 +178,25 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
         for (const check of section.checks) {
           const status = reportState[item.id].checks[check.title];
           if (status) {
-            checkPageBreak(10);
             const { text, color } = statusMap[status];
-            doc.setFontSize(10);
+            const statusText = `[${text}]`;
+            const statusColWidth = 30;
+            const titleX = margin + statusColWidth;
+            const titleMaxWidth = pageWidth - titleX - margin;
             
+            const splitTitle = doc.splitTextToSize(check.title, titleMaxWidth);
+            const neededHeight = (splitTitle.length * 5) + 2;
+            checkPageBreak(neededHeight);
+
+            doc.setFontSize(10);
             doc.setFont(undefined, 'bold');
             doc.setTextColor(color[0], color[1], color[2]);
-            doc.text(`[${text}]`, margin + 10, y);
-            doc.setTextColor(0, 0, 0);
+            doc.text(statusText, margin + 10, y);
             
+            doc.setTextColor(0, 0, 0);
             doc.setFont(undefined, 'normal');
-            const splitTitle = doc.splitTextToSize(check.title, pageWidth - margin * 2 - 40);
-            doc.text(splitTitle, margin + 30, y);
-            y += (splitTitle.length * 4);
+            doc.text(splitTitle, titleX, y);
+            y += neededHeight;
           }
         }
       }
@@ -217,16 +223,32 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
-      <header className="flex justify-between items-center mb-4">
-        <div>
-          <h1 className="text-3xl font-bold">Reporte de Inspección</h1>
-          <p className="text-gray-400">{clientData.clientName} - {clientData.location}</p>
-          <p className="text-gray-400">{clientData.equipmentDetails}</p>
-        </div>
+      <header className="flex justify-between items-start mb-6">
+        <h1 className="text-3xl font-bold">Reporte de Inspección</h1>
         <Button variant="ghost" onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
         </Button>
       </header>
+
+      <Card className="mb-8 bg-gray-800 border-gray-700">
+        <CardHeader>
+            <CardTitle>Información del Cliente y Equipo</CardTitle>
+        </CardHeader>
+        <CardContent className="grid md:grid-cols-3 gap-4 text-sm">
+            <div>
+                <p className="text-gray-400 font-semibold">Cliente</p>
+                <p>{clientData.clientName}</p>
+            </div>
+            <div>
+                <p className="text-gray-400 font-semibold">Localidad</p>
+                <p>{clientData.location}</p>
+            </div>
+            <div>
+                <p className="text-gray-400 font-semibold">Equipo</p>
+                <p>{clientData.equipmentDetails}</p>
+            </div>
+        </CardContent>
+      </Card>
 
       <main>
         <section id="main-image" className="mb-8 relative">
@@ -332,7 +354,7 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
                   Generando...
                 </>
               ) : (
-                'Guardar Reporte'
+                'Generar Informe'
               )}
             </Button>
         </div>
