@@ -221,7 +221,7 @@ export const checklistData: ChecklistItem[] = [
   {
     id: 'diagnostico',
     title: '11. Diagnóstico y Recomendaciones',
-    image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/6916208301e5bc5361ea6b38.png',
+    image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/691625db890fadc262cc2912.png',
     position: { top: '0', left: '0' },
     sections: [
       { title: 'Fallas Detectadas', checks: [] },
