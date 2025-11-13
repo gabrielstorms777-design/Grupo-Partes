@@ -18,6 +18,7 @@ interface ClientData {
   clientName: string;
   location: string;
   equipmentDetails: string;
+  orderNumber: string;
 }
 
 interface InspectionDashboardProps {
@@ -193,7 +194,7 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
     doc.setFont(undefined, 'bold');
     doc.text('Cliente:', margin, y);
     doc.setFont(undefined, 'normal');
-    doc.text(clientData.clientName, margin + 25, y);
+    doc.text(clientData.clientName, margin + 35, y);
 
     doc.setFont(undefined, 'bold');
     doc.text('Fecha:', pageWidth - margin - 35, y);
@@ -204,12 +205,17 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
     doc.setFont(undefined, 'bold');
     doc.text('Localidad:', margin, y);
     doc.setFont(undefined, 'normal');
-    doc.text(clientData.location, margin + 25, y);
+    doc.text(clientData.location, margin + 35, y);
     y += 7;
     doc.setFont(undefined, 'bold');
     doc.text('Equipo:', margin, y);
     doc.setFont(undefined, 'normal');
-    doc.text(clientData.equipmentDetails, margin + 25, y);
+    doc.text(clientData.equipmentDetails, margin + 35, y);
+    y += 7;
+    doc.setFont(undefined, 'bold');
+    doc.text('N° de Orden:', margin, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(clientData.orderNumber, margin + 35, y);
     y += 10;
     doc.line(margin, y, pageWidth - margin, y);
     y += 10;
@@ -346,7 +352,7 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
         <CardHeader>
             <CardTitle>Información del Cliente y Equipo</CardTitle>
         </CardHeader>
-        <CardContent className="grid md:grid-cols-3 gap-4 text-sm">
+        <CardContent className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
             <div>
                 <p className="text-gray-400 font-semibold">Cliente</p>
                 <p>{clientData.clientName}</p>
@@ -358,6 +364,10 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
             <div>
                 <p className="text-gray-400 font-semibold">Equipo</p>
                 <p>{clientData.equipmentDetails}</p>
+            </div>
+            <div>
+                <p className="text-gray-400 font-semibold">N° de Orden</p>
+                <p>{clientData.orderNumber}</p>
             </div>
         </CardContent>
       </Card>

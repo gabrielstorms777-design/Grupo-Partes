@@ -221,7 +221,7 @@ export const checklistData: ChecklistItem[] = [
   {
     id: 'diagnostico',
     title: '11. Diagnóstico y Recomendaciones',
-    image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/6907db06529f0595a7b77062.png',
+    image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/6916208301e5bc5361ea6b38.png',
     position: { top: '0', left: '0' },
     sections: [
       { title: 'Fallas Detectadas', checks: [] },
@@ -233,7 +233,7 @@ export const checklistData: ChecklistItem[] = [
   {
     id: 'insumos',
     title: '12. Insumos Utilizados',
-    image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/690796ce843912134c8999b1.png',
+    image: 'https://storage.googleapis.com/msgsndr/W7R1X8YOEgKpF0ad1L2W/media/6916200dac722f51208e2c8a.png',
     position: { top: '0', left: '0' },
     sections: [{ title: 'Lista de Insumos', checks: [] }],
   },

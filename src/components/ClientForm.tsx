@@ -5,18 +5,19 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
 interface ClientFormProps {
-  onSubmit: (data: { clientName: string; location: string; equipmentDetails: string }) => void;
+  onSubmit: (data: { clientName: string; location: string; equipmentDetails: string; orderNumber: string }) => void;
 }
 
 export const ClientForm = ({ onSubmit }: ClientFormProps) => {
   const [clientName, setClientName] = useState('');
   const [location, setLocation] = useState('');
   const [equipmentDetails, setEquipmentDetails] = useState('');
+  const [orderNumber, setOrderNumber] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (clientName && location && equipmentDetails) {
-      onSubmit({ clientName, location, equipmentDetails });
+    if (clientName && location && equipmentDetails && orderNumber) {
+      onSubmit({ clientName, location, equipmentDetails, orderNumber });
     }
   };
 
@@ -56,6 +57,16 @@ export const ClientForm = ({ onSubmit }: ClientFormProps) => {
                 placeholder="Ej: Grupo 500kVA, N° Serie XXXXX"
                 value={equipmentDetails}
                 onChange={(e) => setEquipmentDetails(e.target.value)}
+                required
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="orderNumber">N° de Orden de referencia</Label>
+              <Input
+                id="orderNumber"
+                value={orderNumber}
+                onChange={(e) => setOrderNumber(e.target.value)}
                 required
                 className="bg-gray-700 border-gray-600 text-white"
               />

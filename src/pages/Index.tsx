@@ -6,6 +6,7 @@ interface ClientData {
   clientName: string;
   location: string;
   equipmentDetails: string;
+  orderNumber: string;
 }
 
 const Index = () => {
