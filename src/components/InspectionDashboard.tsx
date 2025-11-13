@@ -255,9 +255,19 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
           const checkState = reportState[item.id].checks[check.title];
           if (checkState.controlled) {
             const status = checkState.status;
-            const statusInfo = status ? statusMap[status] : { text: 'CONTROLADO', color: [128, 128, 128] };
-            const statusText = `[${statusInfo.text}]`;
-            const statusColWidth = 45;
+            
+            let statusText;
+            let statusColor: [number, number, number] = [128, 128, 128]; // Default gray
+
+            if (status) {
+              const statusInfo = statusMap[status];
+              statusText = `[CONTROLADO - ${statusInfo.text}]`;
+              statusColor = statusInfo.color;
+            } else {
+              statusText = '[CONTROLADO]';
+            }
+
+            const statusColWidth = 65;
             const titleX = margin + statusColWidth;
             const titleMaxWidth = pageWidth - titleX - margin;
             
@@ -267,7 +277,7 @@ export const InspectionDashboard = ({ clientData }: InspectionDashboardProps) =>
 
             doc.setFontSize(10);
             doc.setFont(undefined, 'bold');
-            doc.setTextColor(statusInfo.color[0], statusInfo.color[1], statusInfo.color[2]);
+            doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
             doc.text(statusText, margin + 10, y);
             
             doc.setTextColor(0, 0, 0);
